@@ -35,12 +35,11 @@ function RenderComments(props) {
     const comments = props.comments;
 
     const renderCommentItem = ({item, index}) => {
-        const formatDate = new Intl.DateTimeFormat('en-US', {year: 'numeric', month: 'long', day: '2-digit'}).format(new Date(item.date));
         return (
             <View key={index} style={{margin: 10}}>
                 <Text style={{fontSize: 14}}>{item.comment}</Text>
                 <Text style={{fontSize: 12}}>{item.rating} Stars</Text>
-                <Text style={{fontSize: 12}}>{'-- ' + item.author + ', ' + formatDate}</Text>
+                {/* <Text style={{fontSize: 12}}>{'-- ' + item.author + ', ' + formatDate}</Text> */}
             </View> 
         );
     }
