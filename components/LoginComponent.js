@@ -9,10 +9,8 @@ import { createBottomTabNavigator } from 'react-navigation';
 import { baseUrl } from '../shared/baseUrl';
 
 class LoginTab extends Component {
-
     constructor(props) {
         super(props);
-
         this.state = {
             username: '',
             password: '',
@@ -27,32 +25,36 @@ class LoginTab extends Component {
                 if (userinfo) {
                     this.setState({username: userinfo.username});
                     this.setState({password: userinfo.password});
-                    this.setState({remember: true})
+                    this.setState({remember: true});
                 }
             })
     }
 
     static navigationOptions = {
         title: 'Login',
-        tabBarIcon: ({ tintColor }) => (
-            <Icon
-              name='sign-in'
-              type='font-awesome'            
-              size={24}
-              iconStyle={{ color: tintColor }}
-            />
-          ) 
+        tabBarIcon: ({tintColor}) => (
+            <Icon 
+                name='sign-in'
+                type='font-awesome'
+                size={24}
+                iconStyle={{color: tintColor}}
+                />
+        )
     };
 
     handleLogin() {
         console.log(JSON.stringify(this.state));
-        if (this.state.remember)
-            SecureStore.setItemAsync('userinfo', JSON.stringify({username: this.state.username, password: this.state.password}))
-                .catch((error) => console.log('Could not save user info', error));
-        else
+        if (this.state.remember) {
+            SecureStore.setItemAsync(
+                'userinfo',
+                JSON.stringify({username: this.state.username, password: this.state.password})
+            )
+            .catch((error) => console.log('Could not save user info', error))
+        }
+        else {
             SecureStore.deleteItemAsync('userinfo')
-                .catch((error) => console.log('Could not delete user info', error));
-
+                .catch((error) => console.log('could not delete user info', error))
+        }
     }
 
     render() {
@@ -115,25 +117,34 @@ class LoginTab extends Component {
                 </View>
             </View>
         );
-    }
-
+    }    
 }
 
 class RegisterTab extends Component {
-
     constructor(props) {
         super(props);
-
         this.state = {
             username: '',
             password: '',
             firstname: '',
             lastname: '',
             email: '',
-            remember: false,
-            imageUrl: baseUrl + 'images/logo.png'
+            imageUrl: baseUrl + 'images/logo.png',
+            remember: false
         }
     }
+
+    static navigationOptions = {
+        title: 'Register',
+        tabBarIcon: ({tintColor}) => (
+            <Icon 
+                name='user-plus'
+                type='font-awesome'
+                size={24}
+                iconStyle={{color: tintColor}}
+                />
+        )
+    };
 
     getImageFromCamera = async () => {
         const cameraPermission = await Permissions.askAsync(Permissions.CAMERA);
@@ -146,37 +157,36 @@ class RegisterTab extends Component {
             });
             if (!capturedImage.cancelled) {
                 console.log(capturedImage);
-                this.setState({imageUrl: capturedImage.uri });
-                // this.processImage(capturedImage.uri);
+                this.processImage(capturedImage.uri);
             }
         }
+    }
+
+    processImage = async (imageUri) => {
+        let processedImage = await ImageManipulator.manipulateAsync(
+            imageUri, 
+            [
+                {resize: {width: 400}}
+            ],
+            {format: 'png'}
+        );
+        console.log(processedImage);
+        this.setState({imageUrl: processedImage.uri });
 
     }
 
-    // processImage = async (imageUri) => {
-    //     let processedImage = await ImageManipulator.manipulate(
-    //         imageUri, 
-    //         [
-    //             {resize: {width: 400}}
-    //         ],
-    //         {format: 'png'}
-    //     );
-    //     console.log(processedImage);
-    //     this.setState({imageUrl: processedImage.uri });
+    getImageFromGallery = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+          allowsEditing: true,
+          aspect: [4, 3],
+        });
+        if (!result.cancelled) {
+            console.log(result);
+            this.processImage(result.uri);
+        }
+    }
 
-    // }
     
-    static navigationOptions = {
-        title: 'Register',
-        tabBarIcon: ({ tintColor, focused }) => (
-            <Icon
-              name='user-plus'
-              type='font-awesome'            
-              size={24}
-              iconStyle={{ color: tintColor }}
-            />
-          ) 
-    };
 
     handleRegister() {
         console.log(JSON.stringify(this.state));
@@ -186,7 +196,7 @@ class RegisterTab extends Component {
     }
 
     render() {
-        return(
+        return (
             <ScrollView>
             <View style={styles.container}>
                 <View style={styles.imageContainer}>
@@ -195,9 +205,17 @@ class RegisterTab extends Component {
                         loadingIndicatorSource={require('./images/logo.png')}
                         style={styles.image} 
                         />
+                    
                     <Button
+                        style={{marginLeft: 30}}
                         title="Camera"
                         onPress={this.getImageFromCamera}
+                        />
+                      
+                    <Button 
+                        style={{marginLeft: 30}}
+                        title="Gallery"
+                        onPress={this.getImageFromGallery}
                         />
                 </View>
                 <Input
@@ -217,7 +235,7 @@ class RegisterTab extends Component {
                 <Input
                     placeholder="First Name"
                     leftIcon={{ type: 'font-awesome', name: 'user-o' }}
-                    onChangeText={(firstname) => this.setState({firstname})}
+                    onChangeText={(lastname) => this.setState({firstname})}
                     value={this.state.firstname}
                     containerStyle={styles.formInput}
                     />
@@ -261,35 +279,8 @@ class RegisterTab extends Component {
             </View>
             </ScrollView>
         );
-    }
+    }    
 }
-
-const styles = StyleSheet.create({
-    container: {
-        justifyContent: 'center',
-        margin: 20,
-    },
-    imageContainer: {
-        flex: 1,
-        flexDirection: 'row',
-        margin: 20
-    },
-    image: {
-      margin: 10,
-      width: 80,
-      height: 60
-    },
-    formInput: {
-        margin: 20
-    },
-    formCheckbox: {
-        margin: 20,
-        backgroundColor: null
-    },
-    formButton: {
-        margin: 60
-    }
-});
 
 const Login = createBottomTabNavigator({
     Login: LoginTab,
@@ -303,4 +294,45 @@ const Login = createBottomTabNavigator({
     }
 });
 
+const styles = StyleSheet.create({
+    container: {
+        justifyContent: 'center',
+        marginTop: 20,
+        marginRight: 20,
+        marginBottom: 20,
+        marginLeft:20
+    },
+    imageContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        marginTop: 20,
+        marginRight: 20,
+        marginBottom: 20
+
+    },
+    image: {
+        marginTop: 10,
+        marginRight: 10,
+        marginBottom: 10,
+        width: 80,
+        height: 60
+    },
+    formInput: {
+        marginTop: 20,
+        marginRight: 20,
+        marginBottom: 20
+    },
+    formCheckbox: {
+        marginTop: 20,
+        marginRight: 20,
+        marginBottom: 20,
+        backgroundColor: null
+    },
+    formButton: {
+        marginTop: 60,
+        marginRight: 60,
+        marginBottom: 60,
+        marginLeft: 60
+    }
+});
 export default Login;
